@@ -1,0 +1,10 @@
+Aula 03/10/24 ---------------------------------------------------------------
+
+pip freeze > requirements.txt 
+
+----> salva todos os pacotes instalados em um arquivo txt
+
+pip install -r requirements.txt
+
+----> instala pacotes da lista requirements.txt
+
