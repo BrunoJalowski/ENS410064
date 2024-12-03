@@ -8,7 +8,7 @@ from pathlib import Path
 
 #%%2
 # Abrindo arquivos
-pathDS = Path(r'C:\Users\bruno\Desktop\UFSC\2024.2\ENS410064\2024\dados_entrada\congonhas')
+pathDS = Path('/home/lcqar/ENS410064/2024/dados_entrada/congonhas')
 files = [i for i in pathDS.rglob('*.tif')]
 
 #%%3
@@ -36,6 +36,8 @@ time_indexes
 
 # Concatenando pela dimensão de tempo
 ds = xr.concat(xdas, dim=time_indexes)
+# Convertendo para Daset
+ds = ds.to_dataset(name='color')
 ds
 del xdas 
 x = ds.x[:]
@@ -51,36 +53,54 @@ limits = {'0':'#000000',   # 0 <= v < 0.01
 
 # Transformando os valores haxadecimais em rgb
 r_values = [int(limit[1:3], 16) for limit in limits.values()]
-print(r_values)
 g_values = [int(limit[3:5], 16) for limit in limits.values()]
-print(g_values)
 b_values = [int(limit[5:8], 16) for limit in limits.values()]
-print(b_values)
 
 # Salvando valores de RGB em dicionário com clase de classificações
 rgb_values = [list(i) for i in zip(r_values,g_values,b_values)]
-rgb_values = dict(zip(limits.keys(),rgb_values))
+# rgb_values = dict(zip(limits.keys(),rgb_values))
 
 
-print(rgb_values)
-print(ds.shape)
+# print(rgb_values)
+# print(ds.shape)
 
 # Deletando variáveis que já foram utilizadas
 del r_values, g_values, b_values
 
+
+#%%5.1
+def rgba_to_class(arr: np.array) -> int:
+    #print(arr)
+    # Repete np.array p/ nº de vezes do rgb_values
+    # Compara com rgb_values
+    # Pensar que recebe uma variável arr com valor [0, 0, 0]
+    #return rgb_values.index(arr) if arr in rgb_values else 0
+#    return rgb_values.index(arr) if (arr[0]==rgb_values[0]) else 0
+    
+    #for rgb_value in rgb_values:
+    #    if arr == rgb_value:
+    #        return rgb_values.index(rgb_value)
+    
+    for i, ref in enumerate(rgb_values):
+        if np.array_equal(arr, ref):
+            return i
+    return 0
+
+print(rgba_to_class([255,35,35]))
+
 #%%6
 
+# ds.reduce(rgba_to_class, dim='band', keep_attrs =True, keepdims=True)
+nds = xr.apply_ufunc(rgba_to_class, ds, input_core_dims=[['band']], vectorize=True)
+
+#%%
 testAll=[]
 for classification, rgb_value in rgb_values.items():
-    print(classification)
-    print(rgb_value)
-    print(rgb_value[0])
     testband = (ds[:,0,:,:]==rgb_value[0]) & (ds[:,1,:,:]==rgb_value[1]) &\
         (ds[:,2,:,:]==rgb_value[2])
     testAll.append(testband)
 
 del testband
-del ds
 
 #%%
 
@@ -107,7 +127,7 @@ del ds
 # Ler shapefile de ruas do open street maps da Geofabrik
 import geopandas as gpd
 
-pathSHP = r"C:\Users\bruno\Desktop\UFSC\2024.2\ENS410064\2024\dados_entrada\roads_sudeste\gis_osm_roads_free_1.shp"
+pathSHP = "/home/lcqar/ENS410064/2024/dados_entrada/roads_sudeste/gis_osm_roads_free_1.shp"
 gdf = gpd.read_file(pathSHP)
 
 gdf

@@ -103,3 +103,5 @@ websocket-client==1.8.0
 geopandas
 pandas
 matplotlib
+xarray
+rioxarray
