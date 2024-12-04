@@ -64,14 +64,13 @@ rgb_values = [list(i) for i in zip(r_values,g_values,b_values)]
 # rgb_values = dict(zip(limits.keys(),rgb_values))
 
 
-# print(rgb_values)
-# print(ds.shape)
-
 # Deletando variáveis que já foram utilizadas
 del r_values, g_values, b_values
 
 
 #%%5.1
+
+# Classificando a cor de cada pixel com as cores estabelecidas
 def rgba_to_class(b0, b1, b2) -> int:
     #print(arr)
     # Repete np.array p/ nº de vezes do rgb_values
@@ -92,8 +91,7 @@ def rgba_to_class(b0, b1, b2) -> int:
 print(rgba_to_class(255,35,35))
 
 #%%6
-
-# ds.reduce(rgba_to_class, dim='band', keep_attrs =True, keepdims=True)
+# Aplicando a função de classificação para todos os pixels 
 nds = xr.apply_ufunc(
     rgba_to_class,
     ds.isel(band=0),
@@ -105,15 +103,16 @@ nds = xr.apply_ufunc(
     output_dtypes=[np.int32]
 )
 
-
+# ds.reduce(rgba_to_class, dim='band', keep_attrs =True, keepdims=True)
 #%%
-
+# Computar todas as operações agendadas pelo dask
 nds.compute()
 
 #%%
+# Salvar o nds em netcdf
 nds.to_netcdf(r'C:\Users\bruno\Desktop\UFSC\2024.2\ENS410064\2024\dados_entrada\Vel_classes.nc')
 #%%
-
+# Criando plots para todos os tempos
 nds.color.plot(col='time')
 
 #%%
@@ -147,7 +146,7 @@ nds.color.plot(col='time')
 
 # del ds
 #%%8
-# Ler shapefile de ruas do open street maps da Geofabrik
+# Ler shapefile de ruas do open street maps da Geofabrik para o sudeste inteiro
 import geopandas as gpd
 
 pathSHP = r"C:\Users\bruno\Desktop\UFSC\2024.2\ENS410064\2024\dados_entrada\roads_sudeste\gis_osm_roads_free_1.shp"
@@ -167,13 +166,15 @@ y_min = nds.coords['y'].dropna(dim='y').min().values
 y_max = nds.coords['y'].dropna(dim='y').max().values
 print(x_min,x_max,y_min,y_max)
 
+# CRIANDO CAIXA COM OS LIMITES DO DATASET
 from shapely.geometry import box
 congonhas_bounds = box(x_min,y_min,x_max,y_max)
 
 #%%
-# CORTAR AS RUAS DO OPEN STREET MAPS PARA OS LIMITES
+# CORTAR AS RUAS DO OPEN STREET MAPS PARA OS LIMITES DO DATASET
 gdf_clipped = gdf.clip(congonhas_bounds)
 
+# Apagando gdf original (sudeste inteiro)
 del gdf
 
 #%%
@@ -183,12 +184,6 @@ nds.color.isel(time=1).plot(ax=ax)
 gdf_clipped.plot(ax=ax)
 
 
-#%%
-
-testAll_xr
-
-
-#gdf_clipped.crs
 
 
 # DEFINIR UMA AMOSTRA DOS DADOS PARA TRABALHAR COM MENOS MEMÓRIA
